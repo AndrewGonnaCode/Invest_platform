@@ -12,40 +12,61 @@ services:
       - "5434:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:7
     container_name: crowdfunding-redis
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: crowdfunding-kafka
-    ports:
-      - "9092:9092"   # внешний доступ (NestJS)
-      - "29092:29092" # внутренний доступ (другим контейнерам в сети)
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@crowdfunding-kafka:29093
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      CLUSTER_ID: "4L6g3nShT-eMCtK--X86sw"
+      KAFKA_CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+    # Привязываем 9092 только к localhost хоста — чтобы не открывать Kafka публично
+    ports:
+      - "127.0.0.1:9092:9092"
+      - "29092:29092"
+    restart: unless-stopped
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: crowdfunding-kafka-ui
-    ports:
-      - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: crowdfunding-kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "8080:8080"
     depends_on:
       - kafka
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: crowdfunding-app
+    env_file:
+      - ./.env
+    environment:
+      KAFKA_BROKER: kafka:9092
+      # другие env, которые нужны приложению
+    ports:
+      - "3000:3000" # если будешь проксировать через nginx, можно не открывать наружу
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    restart: unless-stopped
 
 volumes:
   postgres-data:
