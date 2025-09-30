@@ -14,6 +14,6 @@ export const AppDataSource = new DataSource({
   entities: [User, Campaign, Contribution, Role],
   migrations: ['src/migrations/*.ts'],
   migrationsTableName: 'migrations',
-  synchronize: false, // Важно! Отключаем для работы с миграциями
+  synchronize: true, // Важно! Отключаем для работы с миграциями
   logging: true,
 });
