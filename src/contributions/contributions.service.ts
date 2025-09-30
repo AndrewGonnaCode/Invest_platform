@@ -8,6 +8,7 @@ import { isAddress, parseEther } from 'ethers';
 import { UsersService } from 'src/users/users.service';
 import { ContributionJobData, KafkaService } from 'src/kafka/kafka.service';
 import { BlockchainService } from 'src/blockchain/blockchain.service';
+import { ContributionsQueue } from './contributions.queue';
 
 @Injectable()
 export class ContributionsService {
@@ -18,7 +19,8 @@ export class ContributionsService {
     @InjectRepository(Campaign)
     private readonly campaignsRepo: Repository<Campaign>,
     private readonly usersService: UsersService,
-    private readonly kafkaService: KafkaService,
+    private readonly contributionsQueue: ContributionsQueue,
+    // private readonly kafkaService: KafkaService,
      private readonly blockchain: BlockchainService,
   ) {}
 
@@ -46,25 +48,24 @@ export class ContributionsService {
 
     this.logger.log(`Contribution ${saved.id} added to queue`);
 
-    // await this.contributionsQueue.addContributionJob(saved.id, {
-    //   amount: dto.amount,
-    //   walletAddress: user.walletAddress,
-    //   campaignAddress: campaign.contractAddress,
-    // });
+    await this.contributionsQueue.addContributionJob(saved.id, {
+      amount: dto.amount,
+      walletAddress: user.walletAddress,
+      campaignAddress: campaign.contractAddress,
+    });
 
       // Отправляем задачу в Kafka вместо BullMQ
-    await this.kafkaService.sendContributionJob({
-        contributionId: saved.id,
-        amount: dto.amount,
-        walletAddress: user.walletAddress,
-        campaignAddress: campaign.contractAddress,
-      });
+    // await this.kafkaService.sendContributionJob({
+    //     contributionId: saved.id,
+    //     amount: dto.amount,
+    //     walletAddress: user.walletAddress,
+    //     campaignAddress: campaign.contractAddress,
+    //   });
 
     return saved;
   }
 
   async processContribution(data: ContributionJobData) {
-    this.logger.log(`Processing contribution: ${JSON.stringify(data)}`);
       try {
         // 1. Отправляем транзакцию
         const contract = this.blockchain.getCampaignContract(data.campaignAddress);

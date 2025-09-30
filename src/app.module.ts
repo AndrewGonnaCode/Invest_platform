@@ -15,7 +15,6 @@ import { Role } from './entities/role.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/roles.guard';
 import { RolesModule } from './roles/roles.module';
-import { KafkaModule } from './kafka/kafka.module';
 
 @Module({
   imports: [
@@ -43,7 +42,7 @@ import { KafkaModule } from './kafka/kafka.module';
     RedisCacheModule,
     BlockchainModule,
     RolesModule,
-    KafkaModule,
+    // KafkaModule,
   ],
   controllers: [],
   providers: [

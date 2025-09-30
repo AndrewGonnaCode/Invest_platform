@@ -18,10 +18,10 @@ import { ContributionConsumer } from './contributions.consumer';
     BlockchainModule,
     RedisCacheModule,
     UsersModule,
-    KafkaModule,
+    // KafkaModule,
   ],
   controllers: [ContributionsController],
-  providers: [ContributionsService, ContributionsQueue, ContributionsWorker, KafkaService, ContributionConsumer],
-  exports: [ContributionsService, ContributionsQueue, KafkaService],
+  providers: [ContributionsService, ContributionsQueue, ContributionsWorker],
+  exports: [ContributionsService, ContributionsQueue],
 })
 export class ContributionsModule {}

@@ -21,55 +21,35 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: crowdfunding-kafka
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@crowdfunding-kafka:29093
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CLUSTER_ID: ${KAFKA_CLUSTER_ID}
-    # Привязываем 9092 только к localhost хоста — чтобы не открывать Kafka публично
-    ports:
-      - "127.0.0.1:9092:9092"
-      - "29092:29092"
-    restart: unless-stopped
+  # kafka:
+  #   image: confluentinc/cp-kafka:7.5.0
+  #   container_name: crowdfunding-kafka
+  #   environment:
+  #     KAFKA_NODE_ID: 1
+  #     KAFKA_PROCESS_ROLES: broker,controller
+  #     KAFKA_CONTROLLER_QUORUM_VOTERS: 1@crowdfunding-kafka:29093
+  #     KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://crowdfunding-kafka:9092
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     CLUSTER_ID: ${CLUSTER_ID}
+  #   ports:
+  #     - "127.0.0.1:9092:9092"
+  #     - "29092:29092"
+  #   restart: unless-stopped
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: crowdfunding-kafka-ui
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-    ports:
-      - "8080:8080"
-    depends_on:
-      - kafka
-    restart: unless-stopped
-
-  app:
-    build: .
-    container_name: crowdfunding-app
-    env_file:
-      - ./.env.production
-    environment:
-      NODE_ENV: production
-      POSTGRES_HOST: crowdfunding-postgres
-      POSTGRES_PORT: 5432
-      REDIS_URL: redis://crowdfunding-redis:6379
-      KAFKA_BROKER: crowdfunding-kafka:9092
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-      - redis
-      - kafka
-    restart: unless-stopped
+  # kafka-ui:
+  #   image: provectuslabs/kafka-ui:latest
+  #   container_name: crowdfunding-kafka-ui
+  #   environment:
+  #     KAFKA_CLUSTERS_0_NAME: local
+  #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - kafka
+  #   restart: unless-stopped
 
 volumes:
   postgres-data:
