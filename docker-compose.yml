@@ -56,12 +56,15 @@ services:
     build: .
     container_name: crowdfunding-app
     env_file:
-      - ./.env
+      - ./.env.production
     environment:
-      KAFKA_BROKER: kafka:9092
-      # другие env, которые нужны приложению
+      NODE_ENV: production
+      POSTGRES_HOST: crowdfunding-postgres
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://crowdfunding-redis:6379
+      KAFKA_BROKER: crowdfunding-kafka:9092
     ports:
-      - "3000:3000" # если будешь проксировать через nginx, можно не открывать наружу
+      - "3000:3000"
     depends_on:
       - postgres
       - redis

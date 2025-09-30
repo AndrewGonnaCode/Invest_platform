@@ -6,7 +6,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as session from 'express-session';
 import RedisStore from 'connect-redis';
 import Redis from 'ioredis';
-import { Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
