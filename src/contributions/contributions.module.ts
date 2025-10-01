@@ -22,6 +22,6 @@ import { ContributionConsumer } from './contributions.consumer';
   ],
   controllers: [ContributionsController],
   providers: [ContributionsService, ContributionsQueue, ContributionsWorker],
-  exports: [ContributionsService, ContributionsQueue],
+  exports: [ContributionsService, ContributionsQueue, ContributionsWorker],
 })
 export class ContributionsModule {}

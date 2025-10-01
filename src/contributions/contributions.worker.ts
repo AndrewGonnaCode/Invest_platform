@@ -1,10 +1,11 @@
 import { Worker } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Contribution } from '../entities/contribution.entity';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { parseEther } from 'ethers';
 import { ConfigService } from '@nestjs/config';
+import { Campaign } from '../entities/campaign.entity';
 
 @Injectable()
 export class ContributionsWorker {
@@ -14,7 +15,7 @@ export class ContributionsWorker {
   constructor(
     private readonly dataSource: DataSource,
     private readonly blockchain: BlockchainService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
   ) {
     this.worker = new Worker(
       'contributions-queue',
@@ -23,24 +24,43 @@ export class ContributionsWorker {
         const { contributionId, amount, walletAddress, campaignAddress } =
           job.data;
 
-        this.logger.log(`Processing contribution ${contributionId}...`);
+        this.logger.log(`Processing contribution ${contributionId}...`);;
+
+        const campaign = await this.dataSource.getRepository(Campaign).findOne({
+          where: { contractAddress: campaignAddress },
+        });
+
+        if (!campaign) {
+          throw new Error('Campaign not found or not deployed');
+        }
 
         const contributionRepo =
           this.dataSource.getRepository(Contribution);
 
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
         try {
-          // 1. Отправляем транзакцию
           const contract = this.blockchain.getCampaignContract(campaignAddress);
           const tx = await contract.donate({
             value: parseEther(amount),
           });
           await tx.wait(1);
 
-          // 2. Обновляем запись
           await contributionRepo.update(contributionId, {
             status: 'confirmed',
             txHash: tx.hash,
           });
+
+          await queryRunner.manager.increment(
+            Campaign,
+            { id: campaign.id },
+            'totalDonations',
+            amount,
+          )
+
+          await queryRunner.commitTransaction();
 
           this.logger.log(
             `Contribution ${contributionId} confirmed: ${tx.hash}`,
@@ -51,6 +71,8 @@ export class ContributionsWorker {
           await contributionRepo.update(contributionId, {
             status: 'failed',
           });
+        } finally {
+          await queryRunner.release();
         }
       },
       {

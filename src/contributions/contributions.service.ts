@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Contribution } from '../entities/contribution.entity';
 import { CreateContributionDto } from './dto/create-contribution.dto';
 import { Campaign } from '../entities/campaign.entity';
@@ -20,6 +20,7 @@ export class ContributionsService {
     private readonly campaignsRepo: Repository<Campaign>,
     private readonly usersService: UsersService,
     private readonly contributionsQueue: ContributionsQueue,
+    private readonly dataSource: DataSource,
     // private readonly kafkaService: KafkaService,
      private readonly blockchain: BlockchainService,
   ) {}
@@ -32,23 +33,33 @@ export class ContributionsService {
       throw new Error('Campaign not found or not deployed');
     }
     const user = await this.usersService.findByWallet(dto.contributorAddress);
+    
     if(!user){
       throw new Error('User not found');
     }
 
-    const contribution:Contribution = this.contributionsRepo.create({
-      campaign: { id: campaign.id }, // ✅ привязка к Campaign
-      contributor:{id:user.id},
-      amount: dto.amount,
-      txHash: '',
-      status: 'pending',
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    const saved: Contribution = await this.contributionsRepo.save(contribution);
+    let contribution: Contribution;
 
-    this.logger.log(`Contribution ${saved.id} added to queue`);
+    try {
+      contribution = await queryRunner.manager.save(Contribution, {
+        campaign: { id: campaign.id },
+        contributor:{id:user.id},
+        amount: dto.amount,
+        txHash: '',
+        status: 'pending',
+      });
 
-    await this.contributionsQueue.addContributionJob(saved.id, {
+      this.logger.log(`Contribution ${contribution.id} added to queue`);
+    } catch (error) {
+      // await queryRunner.rollbackTransaction();
+      this.logger.error(`Failed to add contribution ${contribution.id} to queue`, error);
+      throw error;
+    } 
+
+
+    await this.contributionsQueue.addContributionJob(contribution.id, {
       amount: dto.amount,
       walletAddress: user.walletAddress,
       campaignAddress: campaign.contractAddress,
@@ -62,7 +73,7 @@ export class ContributionsService {
     //     campaignAddress: campaign.contractAddress,
     //   });
 
-    return saved;
+    return contribution;
   }
 
   async processContribution(data: ContributionJobData) {

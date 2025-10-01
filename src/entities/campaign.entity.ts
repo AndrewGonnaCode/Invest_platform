@@ -21,6 +21,9 @@ export class Campaign {
   @Column({ type: 'numeric', precision: 36, scale: 18 })
   goalAmount: string;
 
+  @Column({ type: 'numeric', precision: 36, scale: 18, nullable: true, default: 0 })
+  totalDonations: string;
+
   @Column({ type: 'timestamptz' })
   deadline: Date;
 

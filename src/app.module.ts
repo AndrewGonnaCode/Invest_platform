@@ -30,7 +30,7 @@ import { RolesModule } from './roles/roles.module';
         password: config.get<string>('POSTGRES_PASSWORD') ?? 'postgres',
         database: config.get<string>('POSTGRES_DB') ?? 'crowdfunding',
         entities: [User, Campaign, Contribution, Role],
-        synchronize: true,
+        synchronize: false,
         migrations: ['dist/migrations/*.js'],
         logging: false,
       }),
