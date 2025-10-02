@@ -15,6 +15,7 @@ import { Role } from './entities/role.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/roles.guard';
 import { RolesModule } from './roles/roles.module';
+import { VaultModule } from './vault/vault.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { RolesModule } from './roles/roles.module';
     UsersModule,
     CampaignsModule,
     ContributionsModule,
+    VaultModule,
     RedisCacheModule,
     BlockchainModule,
     RolesModule,
