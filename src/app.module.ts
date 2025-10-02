@@ -16,6 +16,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/roles.guard';
 import { RolesModule } from './roles/roles.module';
 import { VaultModule } from './vault/vault.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { VaultModule } from './vault/vault.module';
     RedisCacheModule,
     BlockchainModule,
     RolesModule,
+    TelegramModule,
     // KafkaModule,
   ],
   controllers: [],

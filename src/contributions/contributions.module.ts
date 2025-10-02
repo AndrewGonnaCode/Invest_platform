@@ -12,6 +12,7 @@ import { ContributionsWorker } from './contributions.worker';
 import { KafkaModule } from 'src/kafka/kafka.module';
 import { KafkaService } from 'src/kafka/kafka.service';
 import { ContributionConsumer } from './contributions.consumer';
+import { TelegramModule } from 'src/telegram/telegram.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Contribution, Campaign]),
@@ -19,6 +20,7 @@ import { ContributionConsumer } from './contributions.consumer';
     RedisCacheModule,
     UsersModule,
     // KafkaModule,
+    TelegramModule,
   ],
   controllers: [ContributionsController],
   providers: [ContributionsService, ContributionsQueue, ContributionsWorker],

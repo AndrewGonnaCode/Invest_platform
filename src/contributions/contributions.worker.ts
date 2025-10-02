@@ -6,6 +6,7 @@ import { BlockchainService } from '../blockchain/blockchain.service';
 import { parseEther } from 'ethers';
 import { ConfigService } from '@nestjs/config';
 import { Campaign } from '../entities/campaign.entity';
+import { TelegramService } from 'src/telegram/telegram.service';
 
 @Injectable()
 export class ContributionsWorker {
@@ -16,6 +17,7 @@ export class ContributionsWorker {
     private readonly dataSource: DataSource,
     private readonly blockchain: BlockchainService,
     private readonly config: ConfigService,
+    private readonly telegramService: TelegramService,
   ) {
     this.worker = new Worker(
       'contributions-queue',
@@ -63,6 +65,10 @@ export class ContributionsWorker {
           await queryRunner.commitTransaction();
 
           this.logger.log(
+            `Contribution ${contributionId} confirmed: ${tx.hash}`,
+          );
+
+          await this.telegramService.sendMessage(
             `Contribution ${contributionId} confirmed: ${tx.hash}`,
           );
         } catch (err) {
