@@ -7,6 +7,7 @@ import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { ZeroAddress, parseEther } from 'ethers';
+import { AwsS3Service } from 'src/aws/aws-s3.service';
 
 @Injectable()
 export class CampaignsService {
@@ -17,6 +18,7 @@ export class CampaignsService {
     private readonly contributionsRepo: Repository<Contribution>,
     private readonly blockchain: BlockchainService,
     private readonly redis: RedisCacheService,
+    private readonly awsS3Service: AwsS3Service,
   ) {}
 
   async create(dto: CreateCampaignDto) {
@@ -65,6 +67,48 @@ export class CampaignsService {
 
   findById(id: number) {
     return this.campaignsRepo.findOne({ where: { id } });
+  }
+
+  async uploadAvatar(campaignId: number, file: Express.Multer.File): Promise<Campaign> {
+    // Validate file
+    this.awsS3Service.validateImageFile(file);
+
+    // Find campaign
+    const campaign = await this.campaignsRepo.findOne({ where: { id: campaignId } });
+    if (!campaign) {
+      throw new Error('Campaign not found');
+    }
+
+    // Delete old avatar if exists
+    if (campaign.avatarUrl) {
+      try {
+        await this.awsS3Service.deleteFile(campaign.avatarUrl);
+      } catch (error) {
+        console.warn('Failed to delete old avatar:', error.message);
+      }
+    }
+
+    return campaign;
+  }
+
+  async removeAvatar(campaignId: number): Promise<Campaign> {
+    const campaign = await this.campaignsRepo.findOne({ where: { id: campaignId } });
+    if (!campaign) {
+      throw new Error('Campaign not found');
+    }
+
+    if (campaign.avatarUrl) {
+      try {
+        await this.awsS3Service.deleteFile(campaign.avatarUrl);
+      } catch (error) {
+        console.warn('Failed to delete avatar from S3:', error.message);
+      }
+      
+      campaign.avatarUrl = null;
+      return await this.campaignsRepo.save(campaign);
+    }
+
+    return campaign;
   }
 
   async getTotalContributions(campaignId: number): Promise<{ totalAmount: string; contributionsCount: number }> {

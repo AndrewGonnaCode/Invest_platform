@@ -33,6 +33,9 @@ export class Campaign {
   @Column({ nullable: true })
   contractAddress: string;
 
+  @Column({ nullable: true })
+  avatarUrl: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

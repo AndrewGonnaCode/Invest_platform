@@ -9,6 +9,7 @@ import { TrendingService } from './trending.service';
 import { BlockchainModule } from '../blockchain/blockchain.module';
 import { RedisCacheModule } from '../redis-cache/redis-cache.module';
 import { RolesModule } from '../roles/roles.module';
+import { AwsModule } from 'src/aws/aws.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RolesModule } from '../roles/roles.module';
     BlockchainModule,
     RedisCacheModule,
     RolesModule,
+    AwsModule,
   ],
   controllers: [CampaignsController],
   providers: [CampaignsService, EventListenerService, TrendingService],

@@ -7,7 +7,6 @@ import { Campaign } from './entities/campaign.entity';
 import { Contribution } from './entities/contribution.entity';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { CampaignsModule } from './campaigns/campaigns.module';
 import { ContributionsModule } from './contributions/contributions.module';
 import { RedisCacheModule } from './redis-cache/redis-cache.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
@@ -17,9 +16,10 @@ import { RolesGuard } from './auth/roles.guard';
 import { RolesModule } from './roles/roles.module';
 import { VaultModule } from './vault/vault.module';
 import { TelegramModule } from './telegram/telegram.module';
-import { MetricsModule } from './metrics/metrics.module';
+import { AwsModule } from './aws/aws.module';
 import { makeCounterProvider, PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
+import { CampaignsModule } from './campaigns/campaigns.module';
 
 @Module({
   imports: [
@@ -52,6 +52,7 @@ import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
     BlockchainModule,
     RolesModule,
     TelegramModule,
+    AwsModule,
     // MetricsModule,
     // KafkaModule,
   ],
