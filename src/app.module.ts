@@ -12,11 +12,14 @@ import { ContributionsModule } from './contributions/contributions.module';
 import { RedisCacheModule } from './redis-cache/redis-cache.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { Role } from './entities/role.entity';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RolesGuard } from './auth/roles.guard';
 import { RolesModule } from './roles/roles.module';
 import { VaultModule } from './vault/vault.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { makeCounterProvider, PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 
 @Module({
   imports: [
@@ -37,6 +40,9 @@ import { TelegramModule } from './telegram/telegram.module';
         logging: false,
       }),
     }),
+    PrometheusModule.register({
+      path: '/metrics', // эндпоинт для метрик
+    }),
     AuthModule,
     UsersModule,
     CampaignsModule,
@@ -46,6 +52,7 @@ import { TelegramModule } from './telegram/telegram.module';
     BlockchainModule,
     RolesModule,
     TelegramModule,
+    // MetricsModule,
     // KafkaModule,
   ],
   controllers: [],
@@ -53,7 +60,16 @@ import { TelegramModule } from './telegram/telegram.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
-    }
+    },
+    makeCounterProvider({
+      name: 'http_requests_total',
+      help: 'HTTP-запросы по контроллерам',
+      labelNames: ['controller', 'method'],
+    }),
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    },
   ],
 })
 export class AppModule {}
